@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EggTimer — Timer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="timer-page" role="main" aria-live="polite">
+    <button class="back-btn" id="backBtn">Back</button>
+    <header class="timer-header">
+      <div class="headline">Your egg is ready in…</div>
+    </header>
+
+    <section class="big-timer-area" id="bigArea">
+      <!-- container holding PNG and overlay -->
+      <div class="cracked-egg-png" style="position:relative; width:260px; height:260px;">
+        <!-- replace with your cracked PNG filename -->
+        <img id="crackedImg" src="timer.png" alt="Cracked egg" style="width:100%; height:100%; object-fit:contain; display:block;">
+      </div>
+
+      <div class="timer-text" id="timeText" style="margin-top:10px; font-size:3.2rem; font-weight:900;">--:--</div>
+      <div class="mode-title" id="modeTitle">Mode</div>
+
+      <div class="timer-controls">
+        <button id="pause" class="btn">Pause</button>
+        <button id="stop" class="btn danger">Stop</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="timer.js" defer></script>
+</body>
+</html>

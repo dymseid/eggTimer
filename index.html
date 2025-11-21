@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EggTimer — Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="home" role="main" aria-label="Egg Timer Home">
+    <header class="site-header">
+      <h1>EggTimer</h1>
+      <p class="subtitle">How you like your egg 🥚</p>
+    </header>
+
+    <section class="modes-grid" aria-label="Egg modes">
+      <!-- note: replace src values with your filenames or paths -->
+      <a class="mode-card" href="timer.html?mode=soft&mins=4" aria-label="Soft boiled">
+        <div class="egg-wrap">
+          <img class="egg-img" src="boiled-egg.png" alt="Soft boiled egg">
+        </div>
+        <div class="mode-label">Soft<br/><span class="time-small">4 min</span></div>
+      </a>
+
+      <a class="mode-card" href="timer.html?mode=hard&mins=10" aria-label="Hard boiled">
+        <div class="egg-wrap">
+          <img class="egg-img" src="egg.png" alt="Hard boiled egg">
+        </div>
+        <div class="mode-label">Hard<br/><span class="time-small">10 min</span></div>
+      </a>
+
+      <a class="mode-card" href="timer.html?mode=poached&mins=3" aria-label="Poached">
+        <div class="egg-wrap">
+          <img class="egg-img" src="poached-egg.png" alt="Poached egg">
+        </div>
+        <div class="mode-label">Poached<br/><span class="time-small">3 min</span></div>
+      </a>
+
+      <a class="mode-card" href="timer.html?mode=scrambled&mins=2" aria-label="Scrambled">
+        <div class="egg-wrap">
+          <img class="egg-img" src="sandwich.png" alt="Scrambled on toast">
+        </div>
+        <div class="mode-label">Scrambled<br/><span class="time-small">2 min</span></div>
+      </a>
+    </section>
+
+    <a class="custom-btn" href="custom.html" aria-label="Custom timer">Custom</a>
+  </main>
+
+  <script src="index.js" defer></script>
+</body>
+</html>

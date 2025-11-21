@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EggTimer — Custom</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="custom-page" role="main">
+    <button class="back-btn" id="backCustom">Back</button>
+    <header style="text-align:center; margin-top:6px;"><h2>Set minutes</h2></header>
+
+    <section class="dial-area">
+      <div class="dial-wrap" id="dialWrap" aria-label="Minutes dial">
+        <!-- optional faint background like your screenshot -->
+        <div class="dial-bg"></div>
+
+        <!-- plus/minus controls -->
+        <button id="decrease" class="btn">−</button>
+
+        <!-- big central number -->
+        <div id="dialCenter" class="dial-center" role="spinbutton" aria-valuemin="0" aria-valuemax="60" aria-valuenow="3" tabindex="0">00</div>
+
+        <button id="increase" class="btn">+</button>
+      </div>
+
+
+      <div class="custom-actions">
+        <button id="startCustom" class="btn primary">Start</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="custom.js" defer></script>
+</body>
+</html>

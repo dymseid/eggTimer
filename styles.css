@@ -1,0 +1,222 @@
+/* Shared childlike, bright style */
+:root{
+  --bg-yellow: #fff3b0;
+  --accent: #ff7aa2;
+  --brown: #4b3b2b;
+  --white: #ffffff;
+  --muted: #5b5858;
+}
+
+/* page base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  background: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.2), transparent 10%),
+              linear-gradient(180deg, var(--bg-yellow) 0%, #fff7d8 50% );
+  color:var(--brown);
+  display:flex; align-items:center; justify-content:center; padding:18px;
+}
+
+/* childlike pattern: small polka dots */
+body::before{
+  content:""; position:fixed; inset:0; background-image:
+    radial-gradient(circle at 10px 10px, rgba(255,122,162,0.06) 1px, transparent 1px),
+    radial-gradient(circle at 40px 60px, rgba(255,211,107,0.04) 1px, transparent 1px);
+  opacity:1; pointer-events:none;
+}
+
+main{ width:100%; max-width:540px; margin:10px; background:transparent; border-radius:16px; }
+
+/* header */
+.site-header{text-align:center; margin-bottom:14px}
+.site-header h1{margin:8px 0 0; font-size:2.1rem; letter-spacing:0.8px}
+.subtitle{margin:0; color:var(--muted)}
+
+/* Mode grid */
+.modes-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding:10px }
+.mode-card{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  text-decoration:none; color:var(--brown);  background: #fffbee;
+  border-radius:20px; padding:14px; box-shadow: 0 5px 0 #2f2319;;
+  border: 3px solid #2f2319;
+}
+.mode-card:active{transform:translateY(2px)}
+.egg-icon{ width:86px; height:86px; display:grid; place-items:center }
+.mode-label{font-weight:800; text-align:center}
+.time-small{font-weight:600; color:var(--muted); font-size:0.9rem}
+
+/* custom button fixed bottom center */
+.custom-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  padding: 12px 26px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  border-radius: 20px;
+  background: #fffbee;
+  color: #2f2319;
+  border: 3px solid #2f2319;
+  text-decoration: none;
+  box-shadow: 0 5px 0 #2f2319;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.custom-btn:active {
+  transform: translateX(-50%) translateY(3px);
+  box-shadow: 0 2px 0 #2f2319;
+}
+
+
+/* timer page */
+.timer-page{ width:100%; max-width:560px; display:flex; flex-direction:column; gap:10px; align-items:center; }
+.back-btn{ position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  padding: 12px 26px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  border-radius: 20px;
+  background: #fffbee;
+  color: #2f2319;
+  border: 3px solid #2f2319;
+  text-decoration: none;
+  box-shadow: 0 5px 0 #2f2319;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;}
+
+  .back-btn:active {
+  transform: translateX(-50%) translateY(3px);
+  box-shadow: 0 2px 0 #2f2319;
+}
+.timer-header{ text-align:center; margin-top:6px}
+.headline{ font-weight:700; font-size:1.05rem; color:var(--brown) }
+
+.big-timer-area{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:6px; padding:8px; width:100% }
+.cracked-egg{ width:260px; height:260px; display:grid; place-items:center; }
+.timer-text{ font-size:3.6rem; font-weight:900; letter-spacing:0.6px }
+.mode-title{ color:var(--muted); font-weight:600 }
+.timer-controls{ display:flex; gap:10px; margin-top:6px }
+.btn{ padding:12px 26px; 
+    border-radius:20px; background: #fffbee;
+    font-size: 1.05rem;
+  font-weight: 900;
+  color: #2f2319;
+  border: 3px solid #2f2319;
+  text-decoration: none;
+  box-shadow: 0 5px 0 #2f2319;
+  transition: transform 0.15s ease, box-shadow 0.15s ease }
+
+  .btn:active {
+  transform: translateX(0%) translateY(3px);
+  box-shadow: 0 2px 0 #2f2319;
+}
+.btn.danger{ background:#ffd7d7; color:#8b2b2b }
+/* .btn.primary{ background: #fffbee; color:#2f2319;} */
+
+.dial-area { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px; }
+.dial-wrap {
+  width: 240px;
+  height: 240px;
+  border-radius: 20px;
+  display:grid;
+  grid-template-rows: 1fr 1fr 1fr;
+  align-items:center;
+  justify-items:center;
+  position:relative;
+  /* background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.78)); */
+  /* box-shadow: 0 10px 30px rgba(0,0,0,0.06); */
+  padding: 18px;
+}
+
+/* optional screenshot-like background (local path) */
+/* .dial-bg {
+  position:absolute; inset:0; border-radius:20px;
+  background-image: url('/mnt/data/43d56428-9c97-434b-9734-f932de1a651d.png');
+  background-size: cover; background-position: center; opacity: .06; pointer-events:none;
+} */
+
+/* plus/minus buttons (top and bottom) */
+.dial-wrap > button {
+  width: 64px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 1.7rem;
+  font-weight: 900;
+  display:grid; place-items:center;
+  border: 3px solid #2f2319;
+  /* background: #fffbee; */
+  color: #2f2319;
+  box-shadow: 0 5px 0 #2f2319;
+  cursor:pointer;
+  margin: 10px;
+}
+
+/* central big number */
+.dial-center {
+  width: 160px;
+  height: 100px;
+  display:grid;
+  place-items:center;
+  font-size: 3.8rem;
+  font-weight: 900;
+  color: var(--brown);
+  border-radius: 20px;
+  background: linear-gradient(180deg,#fff,#fff8);
+  border: 3px solid #2f2319;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+  user-select: none;
+  touch-action: none; /* we'll handle pointer events */
+}
+
+/* hint text */
+/* .dial-hint { color:var(--muted); font-size:0.95rem; text-align:center; max-width:320px } */
+
+/* small screens */
+@media (max-width:420px){
+  .dial-wrap { width: 200px; height:200px; padding:14px; }
+  .dial-center { width:140px; height:86px; font-size:3rem; }
+  .dial-wrap > button { width:56px; height:44px; font-size:1.5rem; }
+}
+
+/* pressed states for plus/minus */
+.dial-wrap > button:active { transform: translateY(3px); box-shadow: 0 2px 0 #2f2319; }
+
+/* keep primary and danger consistent */
+.btn.primary{  background: #fffbee; color:#2f2319; border: 3px solid #2f2319;box-shadow: 0 5px 0 #2f2319; margin-top: 50px; }
+
+/* responsive tweaks */
+@media (max-width:420px){
+  .cracked-egg{ width:200px; height:200px }
+  .timer-text{ font-size:3rem }
+  .modes-grid{ gap:10px }
+  .egg-icon{ width:72px; height:72px }
+}
+
+/* ensure PNGs remain crisp and centered */
+.egg-img {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast; /* try to keep pixel/PNG crispness */
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated; /* if your icons are pixel-art, pixelated will keep them sharp on stretch */
+}
+
+/* timer yolk overlay styling (if you want to move it out of inline styles) */
+/* #yolkOverlay {
+  font-size: 28px;
+  font-weight: 900;
+  color: #2f2319;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff8;
+} */
+
+/* responsive smaller screens */
+@media (max-width:420px) {
+  .egg-wrap { width: 72px; height:72px }
+  .egg-img { width:60px; height:60px }
+  #yolkOverlay { font-size: 22px; top:60% }
+}
