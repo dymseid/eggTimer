@@ -116,6 +116,37 @@ main{ width:100%; max-width:540px; margin:10px; background:transparent; border-r
 .btn.danger{ background:#ffd7d7; color:#8b2b2b }
 /* .btn.primary{ background: #fffbee; color:#2f2319;} */
 
+/* #enableSoundBtn {
+  margin-top: 15px;
+  display: inline-block;
+} */
+ #enableSoundBtn {
+  position: fixed;
+  bottom: 100px;          /* push slightly up to look clean */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  /* match your UI (inherits .btn styles) */
+  padding: 12px 26px;
+  border-radius: 20px;
+  background: #fffbee;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #2f2319;
+  border: 3px solid #2f2319;
+  text-decoration: none;
+  box-shadow: 0 5px 0 #2f2319;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#enableSoundBtn:active {
+  transform: translate(-50%, 3px);
+  box-shadow: 0 2px 0 #2f2319;
+}
+
+
+
 .dial-area { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px; }
 .dial-wrap {
   width: 240px;

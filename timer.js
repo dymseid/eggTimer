@@ -13,25 +13,9 @@
 
   let totalMs = mins * 60 * 1000
   let endAt = 0, ticker = null, paused = false, remaining = totalMs
-  // audioCtx and osc will be used by WebAudio fallback (kept as in your original file)
   let audioCtx = null, osc = null
-
-  // Developer-uploaded local path (will be transformed by environment to usable URL).
-  // This is the file path from your session — replace with "alarm.mp3" when you add a real mp3 to the folder.
-  const DEV_ALARM_PATH = '/mnt/data/43d56428-9c97-434b-9734-f932de1a651d.png'
-
-  // Ensure there's an <audio id="alarmAudio"> element; if not, create one silently.
-  let audioEl = document.getElementById('alarmAudio')
-  if(!audioEl){
-    audioEl = document.createElement('audio')
-    audioEl.id = 'alarmAudio'
-    audioEl.preload = 'auto'
-    // append but keep no controls — invisible to users
-    document.body.appendChild(audioEl)
-  }
-  // set src to the developer file path (environment will map it). If you put alarm.mp3 in project,
-  // change DEV_ALARM_PATH to 'alarm.mp3' later.
-  audioEl.src = DEV_ALARM_PATH
+  let scheduledOscs = []      // keep references to oscillators we create
+  let fallbackAudio = null    // fallback <audio> element (rarely used)
 
   modeTitle.textContent = mode.charAt(0).toUpperCase() + mode.slice(1)
   // show big initial time
@@ -90,178 +74,152 @@
     navigator.vibrate && navigator.vibrate([200,80,200])
   }
 
-  //
-  // Mobile-friendly audio unlocking + alarm logic
-  //
-  // Some mobile browsers block WebAudio/autoplay until a user gesture occurs.
-  // We resume/create an AudioContext on first user gesture so fallback tones will play.
-  window._audioUnlocked = window._audioUnlocked || false
-  window._audioCtxGlobal = window._audioCtxGlobal || null
+  // ====== ENABLE / UNLOCK AUDIO ======
+  // Creates a small on-screen button (if not present) that the user must tap to enable sound.
+function ensureEnableButton() {
+  if (document.getElementById('enableSoundBtn')) return;
 
-  function unlockAudioIfNeeded(){
-    if(window._audioUnlocked) return Promise.resolve(true)
+  const container = document.getElementById('controls') || document.body;
+
+  const btn = document.createElement('button');
+  btn.id = 'enableSoundBtn';
+  btn.className = 'btn';
+  btn.textContent = 'Enable Sound';
+
+  btn.style.marginTop = '18px';
+
+  container.appendChild(btn);
+
+  const handler = async (e) => {
+    e.stopPropagation();
+    await unlockAudio();
+
+    try { btn.removeEventListener('click', handler); } catch (e) {}
+    btn.remove();
+  };
+
+  btn.addEventListener('click', handler);
+}
+
+  // Unlock and initialize the top-level audio context using a direct user gesture.
+  async function unlockAudio(){
+    if(audioCtx && audioCtx.state !== 'closed'){
+      // try to resume if suspended
+      try{ await audioCtx.resume() }catch(e){}
+      return
+    }
     try{
-      const AudioCtx = window.AudioContext || window.webkitAudioContext
-      if(!AudioCtx){ window._audioUnlocked = true; return Promise.resolve(true) }
-      if(!window._audioCtxGlobal) window._audioCtxGlobal = new AudioCtx()
-      // resume if suspended
-      if(window._audioCtxGlobal.state === 'suspended' && typeof window._audioCtxGlobal.resume === 'function'){
-        return window._audioCtxGlobal.resume().then(()=> {
-          window._audioUnlocked = true
-          // try quick play/pause of audio element to satisfy some browsers
-          try{
-            const p = audioEl.play()
-            if(p && typeof p.then === 'function'){
-              p.then(()=>{ audioEl.pause(); audioEl.currentTime = 0 }).catch(()=>{})
-            }
-          }catch(e){}
-          return true
-        }).catch((e)=> {
-          console.warn('AudioContext resume rejected:', e)
-          return false
-        })
-      } else {
-        window._audioUnlocked = true
-        return Promise.resolve(true)
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      // Play a tiny silent buffer to satisfy the gesture requirement
+      try{
+        const buffer = audioCtx.createBuffer(1, 1, 22050)
+        const src = audioCtx.createBufferSource()
+        src.buffer = buffer
+        src.connect(audioCtx.destination)
+        src.start(0)
+        src.stop(0.01)
+      }catch(e){
+        // Some browsers like a very short oscillator instead
+        try{
+          const g = audioCtx.createGain(); g.gain.setValueAtTime(0.0001, audioCtx.currentTime)
+          const o = audioCtx.createOscillator(); o.type = 'sine'; o.frequency.value = 440
+          o.connect(g); g.connect(audioCtx.destination)
+          o.start()
+          o.stop(audioCtx.currentTime + 0.01)
+        }catch(e){}
       }
+      // ensure running
+      try{ await audioCtx.resume() }catch(e){}
     }catch(e){
-      console.warn('unlockAudioIfNeeded error', e)
-      return Promise.resolve(false)
+      console.warn('unlockAudio failed', e)
+      audioCtx = null
     }
   }
 
-  // Listen to first user gesture (tap/click/keydown) to unlock audio context for mobile
-  window.addEventListener('pointerdown', unlockAudioIfNeeded, { once:true, passive:true })
-  window.addEventListener('touchstart', unlockAudioIfNeeded, { once:true, passive:true })
-  window.addEventListener('keydown', unlockAudioIfNeeded, { once:true, passive:true })
-
-  // Try to play audioEl first, fallback to Mobile-friendly WebAudio pulse
+  // ====== PLAY SOUND (uses global audioCtx) ======
   function playSound(){
-    // stop any existing tones first
-    stopSound()
-
-    // prefer HTMLAudio element if it has a src
     try{
-      if(audioEl && audioEl.src){
-        // ensure unlocked then try to play
-        unlockAudioIfNeeded().then(()=>{
-          try{
-            audioEl.loop = true
-            audioEl.volume = 0.95
-            const p = audioEl.play()
-            if(p && typeof p.then === 'function'){
-              p.then(()=> {
-                // playing succeeded
-                // nothing else to do
-              }).catch((err)=>{
-                console.warn('audio element play rejected, falling back to WebAudio:', err)
-                playToneFallback()
-              })
-            }
-          }catch(err){
-            console.warn('audio element play error, fallback to tone', err)
-            playToneFallback()
-          }
-        }).catch(()=> {
-          // if unlock failed, still try tone fallback
-          playToneFallback()
-        })
-        return
+      // If there's no audioCtx yet, give it one last try (but this will often be blocked)
+      if(!audioCtx){
+        try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)() }catch(e){ audioCtx = null }
       }
-    }catch(e){
-      console.warn('audio element attempt error', e)
-    }
-
-    // fallback
-    unlockAudioIfNeeded().then(()=> playToneFallback()).catch(()=> playToneFallback())
-  }
-
-  // Mobile-friendly WebAudio fallback: creates continuous pulsing using setInterval
-  function playToneFallback(){
-    try{
-      const AudioContext = window.AudioContext || window.webkitAudioContext
-      if(!AudioContext){
-        console.warn('No AudioContext available')
-        return
-      }
-
-      // reuse global audio context if present (helps mobile)
-      audioCtx = window._audioCtxGlobal || new AudioContext()
-      window._audioCtxGlobal = audioCtx
-
-      // if suspended, resume
-      if(audioCtx.state === 'suspended' && typeof audioCtx.resume === 'function'){
+      // If it's suspended, attempt resume
+      if(audioCtx && audioCtx.state === 'suspended'){
         audioCtx.resume().catch(()=>{})
       }
 
-      // master gain
-      const master = audioCtx.createGain()
-      master.gain.value = 0.0001
-      master.connect(audioCtx.destination)
-      window._alarmMaster = master
+      if(audioCtx){
+        const master = audioCtx.createGain()
+        master.gain.value = 0.8
+        master.connect(audioCtx.destination)
 
-      // two oscillators to create a harsher sound
-      const osc1 = audioCtx.createOscillator(); osc1.type = 'sawtooth'; osc1.frequency.value = 880
-      const osc2 = audioCtx.createOscillator(); osc2.type = 'square'; osc2.frequency.value = 660
-      const g1 = audioCtx.createGain(); g1.gain.value = 0.0001
-      const g2 = audioCtx.createGain(); g2.gain.value = 0.0001
-      osc1.connect(g1); g1.connect(master)
-      osc2.connect(g2); g2.connect(master)
+        // create a short repeated pulse pattern using a sawtooth for bite
+        const pulses = 10
+        const pulseLength = 1000 // ms
+        scheduledOscs = [] // reset the list
+        for(let i=0;i<pulses;i++){
+          const t = audioCtx.currentTime + (i * (pulseLength/1000))
+          const o = audioCtx.createOscillator()
+          o.type = 'sawtooth'
+          o.frequency.value = 660 - i*40
+          const g = audioCtx.createGain()
+          g.gain.setValueAtTime(0.0001, t)
+          g.gain.exponentialRampToValueAtTime(0.6, t + 0.02)
+          g.gain.exponentialRampToValueAtTime(0.0001, t + (pulseLength/1000) - 0.05)
+          o.connect(g); g.connect(master)
+          o.start(t); o.stop(t + (pulseLength/1000))
+          scheduledOscs.push(o)
+        }
 
-      osc1.start(); osc2.start()
-      // store refs
-      osc = [osc1, osc2]
-
-      // Create a pulsing function that ramps gains quickly then back down
-      function pulse(){
-        const now = audioCtx.currentTime
-        g1.gain.cancelScheduledValues(now); g2.gain.cancelScheduledValues(now)
-        g1.gain.setValueAtTime(0.0001, now)
-        g1.gain.exponentialRampToValueAtTime(0.28, now + 0.02)
-        g1.gain.exponentialRampToValueAtTime(0.0001, now + 1.0)
-
-        g2.gain.setValueAtTime(0.0001, now)
-        g2.gain.exponentialRampToValueAtTime(0.22, now + 0.02)
-        g2.gain.exponentialRampToValueAtTime(0.0001, now + 1.0)
+        // close audio context after a safe time (but not immediately so stopSound can stop)
+        setTimeout(()=>{ try{ audioCtx.close(); audioCtx = null }catch(e){} }, pulses * pulseLength + 300)
+        // fallback vibration (kept)
+        if(navigator.vibrate) navigator.vibrate([400,200,400,200,800])
+        return
       }
 
-      // first pulse immediately
-      pulse()
-      // repeat every 1100ms until stopped
-      window._alarmPulseInterval = setInterval(pulse, 1100)
-
-      if(navigator.vibrate) navigator.vibrate([400,200,400,200,800])
+      // If we reach here audioCtx wasn't available/allowed. Try the <audio> fallback.
+      if(!fallbackAudio){
+        // small beep via data URI - generate a short WAV beep (sine) programmatically is complex,
+        // so attempt to load a short hosted file if you have one. Here we create a minimal silent audio element
+        fallbackAudio = new Audio()
+        fallbackAudio.loop = true
+        fallbackAudio.playsInline = true
+        // If you have a hosted beep file you can set fallbackAudio.src = '/beep.mp3'
+        // For now, attempt to play (this may fail if autoplay blocked)
+      }
+      fallbackAudio.play().catch((e)=>{ console.warn('fallback audio failed', e) })
+      if(navigator.vibrate) navigator.vibrate([400,200,400])
     }catch(e){
-      console.warn('playToneFallback error', e)
+      // silent fail
+      console.warn('alarm failed', e)
     }
   }
 
+  // ====== STOP SOUND ======
   function stopSound(){
-    // stop audio element if playing
     try{
-      if(audioEl){
-        audioEl.pause()
-        audioEl.currentTime = 0
-        audioEl.loop = false
+      // Stop scheduled oscillators
+      if(scheduledOscs && scheduledOscs.length){
+        scheduledOscs.forEach(o=>{
+          try{ o.stop() }catch(e){}
+        })
+        scheduledOscs = []
       }
     }catch(e){}
-
-    // stop WebAudio pulse/oscillators
     try{
-      if(window._alarmPulseInterval){ clearInterval(window._alarmPulseInterval); window._alarmPulseInterval = null }
-      if(osc){
-        if(Array.isArray(osc)){
-          osc.forEach(o=>{ try{o.stop()}catch(e){} })
-        }else{
-          try{ osc.stop() }catch(e){}
-        }
+      // Close audio context if exists
+      if(audioCtx && audioCtx.state !== 'closed'){
+        audioCtx.close().catch(()=>{})
       }
-      if(window._alarmMaster){ try{ window._alarmMaster.disconnect() }catch(e){}; window._alarmMaster = null }
-      // do NOT forcibly close the global audioCtx (window._audioCtxGlobal) — leaving it helps reuse on mobile.
-      // but close if you explicitly want to cleanup:
-      // if(audioCtx){ try{ audioCtx.close() }catch(e){}; audioCtx = null }
-      osc = null
-    }catch(e){ console.warn('stopSound error', e) }
+    }catch(e){}
+    try{
+      if(fallbackAudio){
+        try{ fallbackAudio.pause() }catch(e){}
+        fallbackAudio = null
+      }
+    }catch(e){}
+    osc = null; audioCtx = null
   }
 
   // wire up controls
@@ -271,6 +229,19 @@
   })
   stopBtn.addEventListener('click', stop)
   backBtn.addEventListener('click', ()=> location.href = 'index.html')
+
+  // Wire a passive unlock attempt: if user interacts with pause/start/stop we try to unlock audio silently.
+  function oneTimeUnlockListener(e){
+    unlockAudio().finally(()=> {
+      try{ document.removeEventListener('click', oneTimeUnlockListener) }catch(e){}
+      try{ document.removeEventListener('touchstart', oneTimeUnlockListener) }catch(e){}
+    })
+  }
+  document.addEventListener('click', oneTimeUnlockListener, { once: true })
+  document.addEventListener('touchstart', oneTimeUnlockListener, { once: true })
+
+  // Create enable button so user has an obvious control if passive unlock fails.
+  ensureEnableButton()
 
   // init display & start
   totalMs = mins * 60 * 1000
